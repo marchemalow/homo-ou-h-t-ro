@@ -14,6 +14,10 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: "La clé API Gemini est manquante sur le serveur (Vercel)." });
+  }
+
   const { query, lang } = req.body;
 
   if (!query) {

@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { GoogleGenAI, Type } from '@google/genai';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Loader2, ThumbsUp, ThumbsDown, Share2, Check, Moon, Sun, Languages } from 'lucide-react';
 import { translations, Lang } from './translations';
@@ -54,47 +53,23 @@ export default function App() {
     setVote(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const langName = {
-        fr: 'français',
-        en: 'English',
-        es: 'español'
-      }[lang as 'fr'|'en'|'es'] || 'français';
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `Est-ce que "${query.trim()}" est plutôt hétérosexuel ou homosexuel ? Réponds en ${langName}.` }]
-          }
-        ],
-        config: {
-          systemInstruction: "Tu es une IA humoristique et décontractée. On te donne un mot ou un concept, et tu dois décider de manière absurde et drôle s'il est plutôt 'Hétérosexuelle' ou 'Homosexuelle' — selon des critères totalement farfelus, des clichés amusants, des références pop culture, etc. Le but est d'être léger, absurde et drôle, jamais blessant. IMPORTANT : tu dois être vraiment équilibré dans tes réponses, environ 47% 'Hétérosexuelle', 47% 'Homosexuelle', et 6% 'Aucun des deux'. Pour chaque concept, explore activement les deux possibilités avant de trancher, et choisis celle qui donne l'explication la plus drôle. Réponds dans la langue de l'utilisateur.",
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              verdict: {
-                type: Type.STRING,
-                description: "Le verdict: 'Hétérosexuelle', 'Homosexuelle' ou 'Aucun des deux'",
-                enum: ["Hétérosexuelle", "Homosexuelle", "Aucun des deux"]
-              },
-              explication: {
-                type: Type.STRING,
-                description: "Une explication courte, drôle et absurde de 1 à 3 phrases."
-              }
-            },
-            required: ["verdict", "explication"]
-          }
-        }
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: query.trim(), lang }),
       });
 
-      const data: Result = JSON.parse(response.text || "{}");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error((errData && errData.error) ? errData.error : 'Query failed');
+      }
+      
+      const data: Result = await response.json();
       setResult({ query: query.trim(), data });
     } catch (error) {
       console.error(error);
-      alert(lang === 'fr' ? "Erreur lors de l'analyse." : "Error during analysis.");
+      const errorMessage = error instanceof Error ? error.message : "Erreur";
+      alert(errorMessage || (lang === 'fr' ? "Erreur lors de l'analyse." : "Error during analysis."));
     } finally {
       setLoading(false);
     }
@@ -109,9 +84,9 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen bg-bg text-text font-sans flex flex-col items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden ${isLgbtBg ? 'rainbow-gradient' : ''}`}>
+    <div className={`min-h-[100dvh] bg-bg text-text font-sans flex flex-col items-center justify-center p-4 sm:p-8 pt-20 transition-colors duration-300 relative overflow-hidden ${isLgbtBg ? 'rainbow-gradient' : ''}`}>
       {/* Controls Overlay */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-50">
         <div className="flex bg-surface border border-border rounded-xl p-1 shadow-sm overflow-hidden scale-90 sm:scale-100">
           {(['fr', 'en', 'es'] as Lang[]).map((l) => (
             <button
@@ -143,7 +118,7 @@ export default function App() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-lg text-center mb-8 relative z-10"
+        className="w-full max-w-2xl text-center mb-6 sm:mb-8 relative z-10 mt-auto sm:mt-0"
       >
         <div className="w-40 h-1.5 rainbow-gradient rounded-full mx-auto mb-6" />
         <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight mb-2">
@@ -155,7 +130,7 @@ export default function App() {
       </motion.div>
 
       {/* Input section */}
-      <div className="w-full max-w-lg mb-8 relative z-10">
+      <div className="w-full max-w-2xl mb-8 relative z-10">
         <div className="relative group">
           <input
             type="text"
@@ -196,10 +171,10 @@ export default function App() {
             key="result"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            className="w-full max-w-lg bg-surface border border-border rounded-2xl p-8 shadow-sm relative z-10"
+            className="w-full max-w-2xl bg-surface border border-border rounded-2xl p-6 sm:p-8 shadow-sm relative z-10"
           >
-            <p className="text-muted italic mb-2">« {result.query} »</p>
-            <h2 className={`font-display text-4xl font-bold mb-4 ${
+            <p className="text-muted italic mb-2 break-words">« {result.query} »</p>
+            <h2 className={`font-display text-3xl sm:text-4xl font-bold mb-4 break-words ${
               result.data.verdict === 'Homosexuelle' 
                 ? 'text-homo' 
                 : result.data.verdict === 'Hétérosexuelle' 
@@ -209,36 +184,38 @@ export default function App() {
               {t.verdicts[result.data.verdict]}
             </h2>
             <div className="h-px bg-border w-full mb-6" />
-            <p className="text-muted leading-relaxed text-lg mb-8">
+            <p className="text-muted leading-relaxed text-base sm:text-lg mb-6 sm:mb-8">
               {result.data.explication}
             </p>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setVote('agree')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-sm font-medium ${
-                  vote === 'agree' 
-                    ? 'bg-text text-bg border-text' 
-                    : 'bg-bg text-muted border-border hover:border-text/30'
-                }`}
-              >
-                <ThumbsUp className="w-4 h-4" />
-                {t.agree}
-              </button>
-              <button
-                onClick={() => setVote('disagree')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-sm font-medium ${
-                  vote === 'disagree' 
-                    ? 'bg-text text-bg border-text' 
-                    : 'bg-bg text-muted border-border hover:border-text/30'
-                }`}
-              >
-                <ThumbsDown className="w-4 h-4" />
-                {t.disagree}
-              </button>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+              <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => setVote('agree')}
+                  className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-3 sm:px-4 py-2 rounded-xl border transition-all text-xs sm:text-sm font-medium ${
+                    vote === 'agree' 
+                      ? 'bg-text text-bg border-text' 
+                      : 'bg-bg text-muted border-border hover:border-text/30'
+                  }`}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  {t.agree}
+                </button>
+                <button
+                  onClick={() => setVote('disagree')}
+                  className={`flex-1 sm:flex-none flex justify-center items-center gap-2 px-3 sm:px-4 py-2 rounded-xl border transition-all text-xs sm:text-sm font-medium ${
+                    vote === 'disagree' 
+                      ? 'bg-text text-bg border-text' 
+                      : 'bg-bg text-muted border-border hover:border-text/30'
+                  }`}
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  {t.disagree}
+                </button>
+              </div>
               <button
                 onClick={handleShare}
-                className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-bg hover:bg-surface transition-all text-sm font-medium text-muted"
+                className="w-full sm:w-auto sm:ml-auto flex justify-center items-center gap-2 px-4 py-2 rounded-xl border border-border bg-bg hover:bg-surface transition-all text-sm font-medium text-muted"
               >
                 {copied ? (
                   <>
