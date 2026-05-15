@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Hétéro ou Homo ? L'IA décide",
+  "description": "Une application humoristique qui utilise l'IA pour déterminer si un concept est hétérosexuel ou homosexuel selon des critères absurdes.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

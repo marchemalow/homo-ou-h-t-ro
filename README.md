@@ -1,31 +1,20 @@
-# Hétéro ou Homo ? (Gaydar App)
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Une application parodique et 100% scientifique (non) qui détermine aléatoirement (mais avec conviction) votre orientation en fonction de votre prénom, avec une justification farfelue générée par l'IA Gemini.
+# Run and deploy your AI Studio app
 
-## Prérequis
+This contains everything you need to run your app locally.
 
-- Node.js (version 18+)
-- Une clé d'API Google Gemini (gratuite sur [Google AI Studio](https://aistudio.google.com/))
+View your app in AI Studio: https://ai.studio/apps/064b8ba7-1876-4b25-8031-0c86d048dfb6
 
-## Installation
+## Run Locally
 
-1. Clonez ce dépôt.
-2. Installez les dépendances :
-   ```bash
-   npm install
-   ```
-3. Créez un fichier `.env` à la racine du projet en vous basant sur `.env.example` :
-   ```bash
-   cp .env.example .env
-   ```
-4. Ouvrez le fichier `.env` et remplacez `MY_GEMINI_API_KEY` par votre vraie clé d'API.
+**Prerequisites:**  Node.js
 
-## Lancement
 
-Démarrez le serveur de développement :
-
-```bash
-npm run dev
-```
-
-Ouvrez ensuite [http://localhost:3000](http://localhost:3000) dans votre navigateur pour profiter de l'application !
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

@@ -1,1 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=DM+Sans:wght@400;500&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Syne", sans-serif;
+  
+  --color-hetero: #D85A30;
+  --color-homo: #7F77DD;
+  --color-bg: #faf9f7;
+  --color-surface: #ffffff;
+  --color-text: #1a1a1a;
+  --color-muted: #6b6b6b;
+  --color-border: rgba(0,0,0,0.1);
+}
+
+.dark {
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-text: #ffffff;
+  --color-muted: #a1a1a1;
+  --color-border: rgba(255,255,255,0.1);
+}
+
+@layer utilities {
+  .rainbow-gradient {
+    background: linear-gradient(90deg, #e24b4a, #ef9f27, #63991a, #378add, #7f77dd, #d4537e);
+  }
+}
