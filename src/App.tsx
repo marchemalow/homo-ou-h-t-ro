@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Search, Loader2, ThumbsUp, ThumbsDown, Share2, Check, Moon, Sun, Languages } from 'lucide-react';
 import { translations, Lang } from './translations';
 
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5544459372919000"
+     crossorigin="anonymous"></script>
+
 interface Result {
   verdict: 'Hétérosexuelle' | 'Homosexuelle' | 'Aucun des deux';
   explication: string;
