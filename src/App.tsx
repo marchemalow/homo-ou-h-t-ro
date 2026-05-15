@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { GoogleGenAI, Type } from '@google/genai';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Loader2, ThumbsUp, ThumbsDown, Share2, Check, Moon, Sun, Languages } from 'lucide-react';
 import { translations, Lang } from './translations';
@@ -53,15 +54,43 @@ export default function App() {
     setVote(null);
 
     try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: query.trim(), lang }),
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const langName = {
+        fr: 'français',
+        en: 'English',
+        es: 'español'
+      }[lang as 'fr'|'en'|'es'] || 'français';
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: `Est-ce que "${query.trim()}" est plutôt hétérosexuel ou homosexuel ? Réponds en ${langName}.` }]
+          }
+        ],
+        config: {
+          systemInstruction: "Tu es une IA humoristique et décontractée. On te donne un mot ou un concept, et tu dois décider de manière absurde et drôle s'il est plutôt 'Hétérosexuelle' ou 'Homosexuelle' — selon des critères totalement farfelus, des clichés amusants, des références pop culture, etc. Le but est d'être léger, absurde et drôle, jamais blessant. IMPORTANT : tu dois être vraiment équilibré dans tes réponses, environ 47% 'Hétérosexuelle', 47% 'Homosexuelle', et 6% 'Aucun des deux'. Pour chaque concept, explore activement les deux possibilités avant de trancher, et choisis celle qui donne l'explication la plus drôle. Réponds dans la langue de l'utilisateur.",
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              verdict: {
+                type: Type.STRING,
+                description: "Le verdict: 'Hétérosexuelle', 'Homosexuelle' ou 'Aucun des deux'",
+                enum: ["Hétérosexuelle", "Homosexuelle", "Aucun des deux"]
+              },
+              explication: {
+                type: Type.STRING,
+                description: "Une explication courte, drôle et absurde de 1 à 3 phrases."
+              }
+            },
+            required: ["verdict", "explication"]
+          }
+        }
       });
 
-      if (!response.ok) throw new Error('Query failed');
-      
-      const data: Result = await response.json();
+      const data: Result = JSON.parse(response.text || "{}");
       setResult({ query: query.trim(), data });
     } catch (error) {
       console.error(error);
